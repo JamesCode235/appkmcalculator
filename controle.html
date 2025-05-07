@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Registros</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="controle-btn">
+        <a href="index.html" class="btn-controle">Voltar</a>
+    </div>
+
+    <div class="container">
+        <h1>Controle de Registros</h1>
+        <div class="controle-filtros">
+            <input type="text" id="filtro-nome" placeholder="Filtrar por nome...">
+            <input type="date" id="filtro-data">
+            <button onclick="filtrarRegistros()">Filtrar</button>
+        </div>
+        
+        <div class="tabela-container">
+            <table id="tabela-registros">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Funcionário</th>
+                        <th>Veículo</th>
+                        <th>Distância</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela">
+                    <!-- Os registros serão inseridos aqui via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="controle.js"></script>
+</body>
+</html>

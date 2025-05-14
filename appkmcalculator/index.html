@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de KM</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="controle-btn">
+    <a href="controle.html" class="btn-controle">Controle</a>
+  </div>
+
+  <div class="container">
+    <h1>Calculadora de KM</h1>
+    <form id="trip-form">
+      <label for="nome">Nome do Funcionário:</label>
+      <input type="text" id="nome" required />
+
+      <label for="veiculo">Categoria do Veículo:</label>
+      <select id="veiculo" required>
+        <option value="">Selecione</option>
+        <option value="carro">Carro</option>
+        <option value="moto">Moto</option>
+        <option value="van">Van</option>
+      </select>
+
+      <div id="categoria-carro-div" style="display: none;">
+        <label for="categoria-carro">Tipo de Carro:</label>
+        <select id="categoria-carro">
+          <option value="popular">Popular</option>
+          <option value="sedan_medio">Sedan Médio</option>
+          <option value="sedan_grande">Sedan Grande</option>
+          <option value="suv_medio">SUV Médio</option>
+          <option value="suv_grande">SUV Grande</option>
+        </select>
+      </div>
+
+      <label for="distancia">Distância percorrida (km):</label>
+      <input type="number" id="distancia" step="0.1" required />
+
+      <button type="submit">Calcular Valor</button>
+    </form>
+
+    <div id="resultado"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

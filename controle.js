@@ -1,52 +1,34 @@
-// Função para carregar os registros
-async function carregarRegistros() {
-    try {
-        const response = await fetch('http://localhost:3000/visitas');
-        const visitas = await response.json();
-        
-        const tbody = document.getElementById('corpo-tabela');
-        tbody.innerHTML = '';
-        
-        visitas.forEach(visita => {
-            const tr = document.createElement('tr');
-            
-            // Calcular o valor baseado na categoria do veículo
-            let tarifa = 0;
-            if (visita.categoria_veiculo === 'carro') {
-                const tarifasCarro = {
-                    'popular': 1.0,
-                    'sedan_medio': 1.2,
-                    'sedan_grande': 1.4,
-                    'suv_medio': 1.6,
-                    'suv_grande': 1.8
-                };
-                tarifa = tarifasCarro[visita.tipo_carro] || 1.0;
-            } else {
-                const tarifas = {
-                    'moto': 0.6,
-                    'van': 1.5
-                };
-                tarifa = tarifas[visita.categoria_veiculo] || 1.0;
-            }
-            
-            const valorTotal = visita.distancia * tarifa;
-            
-            tr.innerHTML = `
-                <td>${new Date(visita.data_registro).toLocaleString()}</td>
-                <td>${visita.nome_funcionario}</td>
-                <td>${visita.categoria_veiculo} ${visita.tipo_carro ? `- ${visita.tipo_carro}` : ''}</td>
-                <td>${visita.distancia} km</td>
-                <td>R$ ${valorTotal.toFixed(2)}</td>
-                <td>
-                    <button onclick="excluirRegistro(${visita.id})" class="btn-excluir">Excluir</button>
-                </td>
-            `;
-            
-            tbody.appendChild(tr);
-        });
-    } catch (error) {
-        console.error('Erro ao carregar registros:', error);
-        alert('Erro ao carregar registros');
+// Função para carregar e exibir o histórico
+function carregarHistorico() {
+    const registros = JSON.parse(localStorage.getItem('registros') || '[]');
+    const tbody = document.getElementById('corpo-tabela');
+    
+    if (registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">Nenhum registro encontrado</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = registros.map(registro => `
+        <tr>
+            <td>${new Date(registro.data).toLocaleString()}</td>
+            <td>${registro.nome}</td>
+            <td>${registro.veiculo} ${registro.tipoCarro ? `- ${registro.tipoCarro}` : ''}</td>
+            <td>${registro.distancia} km</td>
+            <td>R$ ${registro.valor.toFixed(2)}</td>
+            <td>
+                <button onclick="excluirRegistro(${registro.id})" class="btn-excluir">Excluir</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Função para excluir registro
+function excluirRegistro(id) {
+    if (confirm('Tem certeza que deseja excluir este registro?')) {
+        let registros = JSON.parse(localStorage.getItem('registros') || '[]');
+        registros = registros.filter(registro => registro.id !== id);
+        localStorage.setItem('registros', JSON.stringify(registros));
+        carregarHistorico();
     }
 }
 
@@ -68,26 +50,5 @@ function filtrarRegistros() {
     });
 }
 
-// Função para excluir registro
-async function excluirRegistro(id) {
-    if (confirm('Tem certeza que deseja excluir este registro?')) {
-        try {
-            const response = await fetch(`http://localhost:3000/visitas/${id}`, {
-                method: 'DELETE'
-            });
-            
-            if (response.ok) {
-                alert('Registro excluído com sucesso!');
-                carregarRegistros();
-            } else {
-                throw new Error('Erro ao excluir registro');
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro ao excluir registro');
-        }
-    }
-}
-
-// Carregar registros quando a página carregar
-document.addEventListener('DOMContentLoaded', carregarRegistros);
+// Carregar histórico quando a página carregar
+document.addEventListener('DOMContentLoaded', carregarHistorico);

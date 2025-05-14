@@ -6,123 +6,126 @@ const veiculoSelect = document.getElementById('veiculo');
 const categoriaCarroDiv = document.getElementById('categoria-carro-div');
 const categoriaCarroSelect = document.getElementById('categoria-carro');
 const resultadoDiv = document.getElementById('resultado');
-const inputFoto = document.getElementById('foto');
-const previewImg = document.getElementById('preview');
 
 // Mostrar/esconder tipo de carro
 function toggleCategoriaCarro() {
-  if (veiculoSelect.value === 'carro') {
-    categoriaCarroDiv.style.display = 'block';
-  } else {
-    categoriaCarroDiv.style.display = 'none';
-  }
+    categoriaCarroDiv.style.display = veiculoSelect.value === 'carro' ? 'block' : 'none';
 }
 
+// Event listeners
 veiculoSelect.addEventListener('change', toggleCategoriaCarro);
 window.addEventListener('DOMContentLoaded', toggleCategoriaCarro);
 
-// Pré-visualização da imagem
-inputFoto.addEventListener('change', function () {
-  const file = inputFoto.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      previewImg.src = e.target.result;
-      previewImg.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-// Envio do formulário e cálculo
-form.addEventListener('submit', async function (e) {
-  e.preventDefault();
-
-  const nome = document.getElementById('nome').value;
-  const veiculo = veiculoSelect.value;
-  const distancia = parseFloat(document.getElementById('distancia').value);
-  const categoriaCarro = document.getElementById('categoria-carro').value;
-  const foto = document.getElementById('preview').src;
-
-  const formData = {
-    nome: nome,
-    veiculo: veiculo,
-    categoriaCarro: categoriaCarro,
-    distancia: distancia,
-    foto: foto
-  };
-
-  try {
-    console.log('Enviando dados:', formData); // Log para debug
-
-    const response = await fetch('http://localhost:3000/visitas', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData)
-    });
-
-    const data = await response.json();
-    console.log('Resposta do servidor:', data); // Log para debug
-
-    if (data.error) {
-      throw new Error(data.error);
+// Função para calcular o valor
+function calcularValor(veiculo, tipoCarro, distancia) {
+    let tarifa = 0;
+    
+    if (veiculo === 'carro') {
+        const tarifasCarro = {
+            'popular': 1.0,
+            'sedan_medio': 1.2,
+            'sedan_grande': 1.4,
+            'suv_medio': 1.6,
+            'suv_grande': 1.8
+        };
+        tarifa = tarifasCarro[tipoCarro] || 1.0;
+    } else {
+        const tarifas = {
+            'moto': 0.6,
+            'van': 1.5
+        };
+        tarifa = tarifas[veiculo] || 1.0;
     }
-
-    alert('Visita registrada com sucesso!');
     
-    // Limpar formulário
-    this.reset();
-    document.getElementById('preview').style.display = 'none';
-    
-  } catch (error) {
-    console.error('Erro:', error);
-    alert('Erro ao registrar visita: ' + error.message);
-  }
-});
-
-// Função para carregar e exibir visitas
-async function carregarVisitas() {
-  try {
-    const response = await fetch('http://localhost:3000/visitas');
-    const visitas = await response.json();
-    
-    const resultadoDiv = document.getElementById('resultado');
-    resultadoDiv.innerHTML = '<h2>Registros de Visitas</h2>';
-    
-    if (visitas.length === 0) {
-      resultadoDiv.innerHTML += '<p>Nenhuma visita registrada.</p>';
-      return;
-    }
-
-    const tabela = document.createElement('table');
-    tabela.innerHTML = `
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Funcionário</th>
-          <th>Veículo</th>
-          <th>Distância</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${visitas.map(visita => `
-          <tr>
-            <td>${new Date(visita.data_registro).toLocaleString()}</td>
-            <td>${visita.nome_funcionario}</td>
-            <td>${visita.categoria_veiculo} ${visita.tipo_carro ? `- ${visita.tipo_carro}` : ''}</td>
-            <td>${visita.distancia} km</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    `;
-    
-    resultadoDiv.appendChild(tabela);
-  } catch (error) {
-    console.error('Erro ao carregar visitas:', error);
-  }
+    return distancia * tarifa;
 }
 
-// Carregar visitas quando a página carregar
-document.addEventListener('DOMContentLoaded', carregarVisitas);
+// Função para salvar no localStorage
+function salvarRegistro(registro) {
+    let registros = JSON.parse(localStorage.getItem('registros') || '[]');
+    registro.id = Date.now();
+    registro.data = new Date().toISOString();
+    registros.push(registro);
+    localStorage.setItem('registros', JSON.stringify(registros));
+}
+
+// Função para exibir o resultado
+function exibirResultado(registro) {
+    resultadoDiv.innerHTML = `
+        <div class="resultado-box">
+            <h2>Resultado do Cálculo</h2>
+            <p><strong>Funcionário:</strong> ${registro.nome}</p>
+            <p><strong>Veículo:</strong> ${registro.veiculo} ${registro.tipoCarro ? `- ${registro.tipoCarro}` : ''}</p>
+            <p><strong>Distância:</strong> ${registro.distancia} km</p>
+            <p><strong>Valor Total:</strong> R$ ${registro.valor.toFixed(2)}</p>
+        </div>
+    `;
+}
+
+// Função para exibir histórico
+function exibirHistorico() {
+    const registros = JSON.parse(localStorage.getItem('registros') || '[]');
+    
+    if (registros.length === 0) return;
+
+    const historicoHTML = `
+        <div class="historico">
+            <h2>Histórico de Registros</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Funcionário</th>
+                        <th>Veículo</th>
+                        <th>Distância</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${registros.map(reg => `
+                        <tr>
+                            <td>${new Date(reg.data).toLocaleString()}</td>
+                            <td>${reg.nome}</td>
+                            <td>${reg.veiculo} ${reg.tipoCarro ? `- ${reg.tipoCarro}` : ''}</td>
+                            <td>${reg.distancia} km</td>
+                            <td>R$ ${reg.valor.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    resultadoDiv.insertAdjacentHTML('beforeend', historicoHTML);
+}
+
+// Manipulador do formulário
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const nome = document.getElementById('nome').value;
+    const veiculo = veiculoSelect.value;
+    const distancia = parseFloat(document.getElementById('distancia').value);
+    const tipoCarro = categoriaCarroSelect.value;
+
+    // Calcular valor
+    const valor = calcularValor(veiculo, tipoCarro, distancia);
+
+    // Criar registro
+    const registro = {
+        nome,
+        veiculo,
+        tipoCarro,
+        distancia,
+        valor
+    };
+
+    // Salvar e exibir
+    salvarRegistro(registro);
+    exibirResultado(registro);
+    exibirHistorico();
+
+    // Limpar formulário
+    form.reset();
+    toggleCategoriaCarro();
+});
